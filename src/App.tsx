@@ -1,9 +1,18 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import { Button, createTheme, CssBaseline, ThemeProvider } from "@mui/material";
-import "./App.css";
+import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import Login from "../src/Pages/Login";
+import Orders from "./Pages/Orders";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Login />,
+  },
+  {
+    path: "/orders/:id",
+    element: <Orders />,
+  },
+]);
 
 function App() {
   const lightTheme = createTheme({
@@ -26,7 +35,7 @@ function App() {
   return (
     <ThemeProvider theme={lightTheme}>
       <CssBaseline />
-      <Login />
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }

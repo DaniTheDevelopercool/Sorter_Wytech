@@ -6,6 +6,8 @@ import PatternDesign from "../assets/Pattern.png";
 import AccountBoxRoundedIcon from "@mui/icons-material/AccountBoxRounded";
 import WidgetsRoundedIcon from "@mui/icons-material/WidgetsRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import { useNavigate } from "react-router";
+import { useState } from "react";
 
 const LoginHeader = () => {
   return (
@@ -23,10 +25,14 @@ const CustomInput = ({
   label,
   Icon,
   placeholder,
+  onChange,
+  type,
 }: {
   label: string;
   Icon?: any;
   placeholder: string;
+  type: "text" | "number";
+  onChange: (text: string) => void;
 }) => {
   return (
     <Box flex={1} display={"flex"} flexDirection={"column"} gap={1}>
@@ -35,9 +41,13 @@ const CustomInput = ({
         <label style={{ textAlign: "start" }}>{label}</label>
       </Box>
       <TextField
+        type={type}
         variant="outlined"
         style={{ flex: 1 }}
         placeholder={placeholder}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
       />
     </Box>
   );
@@ -56,6 +66,8 @@ const Divider = () => {
 };
 
 const LoginForm = () => {
+  let navigate = useNavigate();
+  const [orderID, setOrderID] = useState<number | null>(null);
   return (
     <Box flex={1} flexDirection={"column"} display={"flex"}>
       <Box
@@ -97,15 +109,24 @@ const LoginForm = () => {
             label="ID EMPLEADO"
             Icon={AccountBoxRoundedIcon}
             placeholder="dgarcia"
+            type="text"
+            onChange={() => {}}
           />
 
           <CustomInput
             label="N° de Grupo"
             Icon={WidgetsRoundedIcon}
             placeholder="5896968606950"
+            type="number"
+            onChange={(text) => {
+              setOrderID(Number(text));
+            }}
           />
         </Box>
         <Button
+          onClick={() => {
+            navigate(`/orders/${orderID}`);
+          }}
           variant="contained"
           sx={{
             maxWidth: "150px",
@@ -136,7 +157,6 @@ const LoginPattern = () => {
         backgroundImage: `url(${PatternDesign})`,
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
-        //backgroundColor: "red",
         flex: 1,
         display: {
           xs: "none",
