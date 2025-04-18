@@ -7,6 +7,10 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   Slide,
   TextField,
   Typography,
@@ -17,13 +21,15 @@ import WidgetsRoundedIcon from "@mui/icons-material/WidgetsRounded";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import RequestQuoteRoundedIcon from "@mui/icons-material/RequestQuoteRounded";
 import { TransitionProps } from "@mui/material/transitions";
+import { Order } from "../../../types/Orders";
+import { Location } from "../../../types/Locations";
 
 export const ORDER_LABELS = {
-  orderID: "PEDIDO",
+  id: "PEDIDO",
   location: "UBICACIÓN",
-  ean: "EAN",
+  status: "ESTADO",
   quantity: "ENVIADO",
-  requestedQuantity: "SOLICITADO",
+  wave: "OLEADA",
 };
 
 const Chip = ({
@@ -100,34 +106,37 @@ const OrderDataItem = ({
 };
 
 export default function OrderCard({
-  orderID,
-  location,
-  ean,
-  requestedQuantity,
+  order: { id, status, wave, location },
+  availableLocations,
+  onLocationChange,
+  onSubmitBarcode,
 }: {
-  orderID: string;
-  location: string;
-  ean: string;
-  requestedQuantity: number;
+  order: Order;
+  availableLocations?: Location[];
+  onLocationChange?: (locationIndex: number) => void;
+  onSubmitBarcode?: (barcode: string) => void;
 }) {
+  const [productEAN, setProductEAN] = useState("");
   const [quantity, setQuantity] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
-
+  const locationId = availableLocations?.findIndex(
+    (loc) => loc.id.toString() == location
+  );
   return (
     <>
       <Box
-        flex={1}
         display={"flex"}
         flexDirection={"column"}
         bgcolor="#F2F2F2"
         padding={2}
         gap={1}
         borderRadius={2}
+        width={"25%"}
       >
-        {orderID && (
+        {id && (
           <OrderDataItem
-            label={ORDER_LABELS["orderID"]}
-            data={orderID}
+            label={ORDER_LABELS["id"]}
+            data={id}
             chipStyle="warning"
             Icon={ArrowCircleUpRoundedIcon}
           />
@@ -139,17 +148,17 @@ export default function OrderCard({
             Icon={MyLocationRoundedIcon}
           />
         )}
-        {ean && (
+        {status && (
           <OrderDataItem
-            label={ORDER_LABELS["ean"]}
-            data={ean}
+            label={ORDER_LABELS["status"]}
+            data={status}
             Icon={WidgetsRoundedIcon}
           />
         )}
-        {requestedQuantity && (
+        {wave && (
           <OrderDataItem
-            label={ORDER_LABELS["requestedQuantity"]}
-            data={requestedQuantity}
+            label={ORDER_LABELS["wave"]}
+            data={wave}
             Icon={RequestQuoteRoundedIcon}
           />
         )}
@@ -160,6 +169,60 @@ export default function OrderCard({
             Icon={NearMeOutlinedIcon}
           />
         )}
+        {(availableLocations?.length ?? 0 > 0) && !location ? (
+          <FormControl fullWidth>
+            <InputLabel id="available-locations-select-label">
+              {ORDER_LABELS["location"]}
+            </InputLabel>
+            <Select
+              labelId="available-locations-select-label"
+              id="available-locations-select"
+              value={locationId ?? ""}
+              label={ORDER_LABELS["location"]}
+              onChange={(event) => {
+                console.log("event", event.target.value);
+                onLocationChange?.(Number(event.target.value) ?? 0);
+              }}
+            >
+              {availableLocations?.map((location, index) => (
+                <MenuItem value={index}>{location.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
+          !location && (
+            <Typography variant="body1" fontWeight="bold">
+              No hay ubicaciones disponibles.
+            </Typography>
+          )
+        )}
+
+        <Box
+          display="flex"
+          flexDirection="row"
+          gap={1}
+          alignItems="center"
+          justifyContent={"space-between"}
+        >
+          <TextField
+            name="barcode"
+            id="outlined-basic"
+            label="EAN Producto"
+            variant="outlined"
+            onChange={(event) => {
+              setProductEAN(event.target.value);
+            }}
+            value={productEAN}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            type="button"
+            onClick={() => onSubmitBarcode?.(productEAN)}
+          >
+            Seleccionar Producto
+          </Button>
+        </Box>
 
         <Box
           display="flex"
@@ -171,7 +234,7 @@ export default function OrderCard({
             sx={{ maxHeight: 36 }}
             variant="contained"
             color="success"
-            onClick={() => setQuantity(requestedQuantity)}
+            onClick={() => setQuantity(1)}
           >
             Completar
           </Button>
