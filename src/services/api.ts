@@ -15,6 +15,32 @@ export const api = createApi({
     getLabels: builder.query<Label[], void>({
       query: () => "esl/labels",
     }),
+    linkLabelWithLocation: builder.mutation<
+      void,
+      { labelMAC: string; locationID: string | number }
+    >({
+      query: ({ labelMAC, locationID }) => ({
+        url: "esl/link-label",
+        method: "POST",
+        body: {
+          labelId: labelMAC,
+          locationId: locationID,
+        },
+      }),
+    }),
+    createLocation: builder.mutation<void, Location>({
+      query: (location) => ({
+        url: "esl/locations",
+        method: "POST",
+        body: location,
+      }),
+    }),
+    deleteLocation: builder.mutation<void, number>({
+      query: (locationID) => ({
+        url: `esl/locations/${locationID}`,
+        method: "DELETE",
+      }),
+    }),
     getLocations: builder.query<Location[], void>({
       query: () => "esl/locations",
     }),
@@ -28,7 +54,7 @@ export const api = createApi({
       query: ({ orderId, locationId }) => ({
         url: `orders/${orderId}/assign-location`,
         method: "POST",
-        body: { orderState: "Picking", location: locationId },
+        body: { location: locationId },
       }),
     }),
     assignEan: builder.mutation<void, { orderId: string; ean: string }>({
@@ -48,4 +74,7 @@ export const {
   useGetAvailableLocationsQuery,
   useAssignLocationMutation,
   useAssignEanMutation,
+  useLinkLabelWithLocationMutation,
+  useCreateLocationMutation,
+  useDeleteLocationMutation,
 } = api;

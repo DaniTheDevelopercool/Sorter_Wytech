@@ -7,10 +7,11 @@ import { store } from "./redux/store";
 import Dashboard from "./Pages/Dashboard";
 import Labels from "./Pages/Labels";
 import Locations from "./Pages/Locations";
+import Groups from "./Pages/Groups";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/login",
     element: <Login />,
   },
   {
@@ -22,7 +23,7 @@ const router = createBrowserRouter([
     element: <Orders />,
   },
   {
-    path: "/dashboard",
+    path: "/",
     element: <Dashboard />,
   },
   {
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: "/locations",
     element: <Locations />,
+  },
+  {
+    path: "/groups",
+    element: <Groups />,
   },
 ]);
 

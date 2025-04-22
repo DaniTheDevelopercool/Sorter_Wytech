@@ -23,7 +23,7 @@ export type Label = {
   LED_FLASH_COUNT: number | null;
   LQI: number;
   LQI_RX: number;
-  LAST_POLL: string; // Podrías convertirlo a Date si lo parseas
+  LAST_POLL: string;
   LAST_INFO: string;
   LAST_IMAGE: string;
   BASE_STATION: string;

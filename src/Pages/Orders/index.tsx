@@ -1,20 +1,20 @@
-import { Box, Typography } from "@mui/material";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import { Badge, Box, Typography } from "@mui/material";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import Loading from "../../Components/Common/Loading";
 import OrderCard from "../../Components/Common/OrderCard";
-import Header from "./Header";
-import OrderGroupHeader from "./OrderGroupHeader";
 import {
-  useAssignEanMutation,
   useAssignLocationMutation,
   useGetLocationsQuery,
   useGetOrdersQuery,
 } from "../../services/api";
-import { useMemo, useState } from "react";
-import Loading from "../../Components/Common/Loading";
-import { Order } from "../../types/Orders";
 import { Location } from "../../types/Locations";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import { Order } from "../../types/Orders";
+import Header from "./Header";
+import OrderGroupHeader from "./OrderGroupHeader";
+import RoomServiceRoundedIcon from "@mui/icons-material/RoomServiceRounded";
 
 export default function Orders() {
   const [loading, setLoading] = useState(false);
@@ -23,13 +23,12 @@ export default function Orders() {
   const { data: locationsData, refetch: refetchLocations } =
     useGetLocationsQuery();
   const [setLocation] = useAssignLocationMutation();
-  const [setEan] = useAssignEanMutation();
 
-  const onLocationChange = async (orderId: string, locationIndex: number) => {
+  const onLocationChange = async (orderId: string, location: number) => {
     setLoading(true);
     const response = await setLocation({
       orderId,
-      locationId: locationsData?.[locationIndex]?.id ?? 0,
+      locationId: location,
     });
     if (response.data) {
       refetch();
@@ -37,17 +36,6 @@ export default function Orders() {
     }
     setLoading(false);
     console.log("Assign response", response);
-  };
-
-  const onEanChange = async (orderId: string, ean: string) => {
-    setLoading(true);
-    setEan({ orderId, ean });
-    const response = await setEan({ orderId, ean });
-    if (response.data) {
-      refetch();
-      refetchLocations();
-    }
-    setLoading(false);
   };
 
   const availableLocations = useMemo(
@@ -79,15 +67,15 @@ export default function Orders() {
             ordersTitle="Sin asignar"
             orders={unasignedOrders}
             availableLocations={availableLocations ?? []}
+            locationsData={locationsData ?? []}
             onLocationChange={onLocationChange}
-            onEanChange={onEanChange}
           />
           <OrdersByCategory
             ordersTitle="Asignados"
             orders={assignedOrders}
             availableLocations={availableLocations ?? []}
+            locationsData={locationsData ?? []}
             onLocationChange={onLocationChange}
-            onEanChange={onEanChange}
           />
         </Box>
       )}
@@ -99,14 +87,14 @@ const OrdersByCategory = ({
   ordersTitle,
   orders,
   availableLocations,
+  locationsData,
   onLocationChange,
-  onEanChange,
 }: {
   ordersTitle: string;
   orders: Order[];
   availableLocations: Location[];
+  locationsData: Location[];
   onLocationChange: (orderId: string, locationId: number) => void;
-  onEanChange: (orderId: string, ean: string) => void;
 }) => {
   const [show, setShow] = useState(false);
   return (
@@ -121,6 +109,9 @@ const OrdersByCategory = ({
         <Typography variant="h5" fontWeight="bold" padding={2}>
           {ordersTitle}
         </Typography>
+        <Badge color="error" badgeContent={orders.length}>
+          <RoomServiceRoundedIcon />
+        </Badge>
         {show ? <KeyboardArrowDownRoundedIcon /> : <ChevronRightRoundedIcon />}
       </Box>
       {show && (
@@ -130,10 +121,10 @@ const OrdersByCategory = ({
               key={order.id}
               order={order}
               availableLocations={availableLocations}
+              locationsData={locationsData}
               onLocationChange={(locationId) =>
                 onLocationChange(order.id, locationId)
               }
-              onSubmitBarcode={(ean) => onEanChange(order.id, ean)}
             />
           ))}
         </Box>

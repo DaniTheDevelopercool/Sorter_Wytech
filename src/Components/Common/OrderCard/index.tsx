@@ -1,324 +1,149 @@
-import React, { useState } from "react";
 import {
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
+  Card,
+  CardContent,
   FormControl,
   InputLabel,
   MenuItem,
   Select,
-  Slide,
-  TextField,
+  Stack,
   Typography,
 } from "@mui/material";
-import NearMeOutlinedIcon from "@mui/icons-material/NearMeOutlined";
-import ArrowCircleUpRoundedIcon from "@mui/icons-material/ArrowCircleUpRounded";
-import WidgetsRoundedIcon from "@mui/icons-material/WidgetsRounded";
-import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
-import RequestQuoteRoundedIcon from "@mui/icons-material/RequestQuoteRounded";
-import { TransitionProps } from "@mui/material/transitions";
-import { Order } from "../../../types/Orders";
+import { useState } from "react";
 import { Location } from "../../../types/Locations";
-
-export const ORDER_LABELS = {
-  id: "PEDIDO",
-  location: "UBICACIÓN",
-  status: "ESTADO",
-  quantity: "ENVIADO",
-  wave: "OLEADA",
-};
-
-const Chip = ({
-  Icon,
-  label,
-  chipStyle = "outline",
-}: {
-  label: string | number;
-  Icon?: any;
-  chipStyle?: "outline" | "black" | "warning";
-}) => {
-  const chipStyles = {
-    outline: {
-      backgroundColor: "white",
-      border: 2,
-      borderColor: "black",
-      color: "#000000",
-    },
-    black: { backgroundColor: "black", color: "#FFFFFF" },
-    warning: { backgroundColor: "#FF9500", color: "#FFFFFF" },
-  };
-
-  return (
-    <Box
-      display="flex"
-      flexDirection="row"
-      alignItems="center"
-      gap={1}
-      bgcolor={chipStyles[chipStyle].backgroundColor}
-      sx={{ ...chipStyles[chipStyle] }}
-      padding={1}
-      borderRadius={5}
-    >
-      {!!Icon && <Icon color={chipStyles[chipStyle].color} />}
-      <Typography
-        fontWeight="bold"
-        variant="body2"
-        color={chipStyles[chipStyle].color}
-      >
-        {label}
-      </Typography>
-    </Box>
-  );
-};
-
-const OrderDataItem = ({
-  label,
-  data,
-  Icon,
-  chipStyle,
-}: {
-  label: string;
-  data: string | number;
-  chipStyle?: "outline" | "black" | "warning";
-  Icon?: any;
-}) => {
-  return (
-    <Box
-      display={"flex"}
-      flexDirection={"row"}
-      gap={2}
-      alignItems="center"
-      bgcolor={"white"}
-      padding={2}
-      justifyContent="space-between"
-      borderRadius={2}
-    >
-      <Typography variant="body1" fontWeight="bold">
-        {label}:{" "}
-      </Typography>
-      <Chip Icon={Icon} label={data} chipStyle={chipStyle} />
-    </Box>
-  );
-};
+import {
+  COLOR_BY_STATUS,
+  Order,
+  ORDER_STATUS,
+  ORDER_STATUS_LABELS,
+} from "../../../types/Orders";
+import QuantityModal from "../../Modals/Quantity";
+import ProductsDetailModal from "../../Modals/ProductsDetail";
 
 export default function OrderCard({
-  order: { id, status, wave, location },
+  order,
+  locationsData,
   availableLocations,
   onLocationChange,
-  onSubmitBarcode,
 }: {
   order: Order;
+  locationsData?: Location[];
   availableLocations?: Location[];
   onLocationChange?: (locationIndex: number) => void;
-  onSubmitBarcode?: (barcode: string) => void;
 }) {
-  const [productEAN, setProductEAN] = useState("");
+  const { id, location, status, wave } = order;
   const [quantity, setQuantity] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
-  const locationId = availableLocations?.findIndex(
-    (loc) => loc.id.toString() == location
-  );
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+
   return (
     <>
-      <Box
-        display={"flex"}
-        flexDirection={"column"}
-        bgcolor="#F2F2F2"
-        padding={2}
-        gap={1}
-        borderRadius={2}
-        width={"25%"}
+      <Card
+        sx={{
+          width: "25%",
+          borderLeft: `8px solid ${COLOR_BY_STATUS[status].backgroundColor}`,
+          backgroundColor: "#f5faff",
+          borderRadius: 2,
+          boxShadow: 3,
+        }}
       >
-        {id && (
-          <OrderDataItem
-            label={ORDER_LABELS["id"]}
-            data={id}
-            chipStyle="warning"
-            Icon={ArrowCircleUpRoundedIcon}
-          />
-        )}
-        {location && (
-          <OrderDataItem
-            label={ORDER_LABELS["location"]}
-            data={location}
-            Icon={MyLocationRoundedIcon}
-          />
-        )}
-        {status && (
-          <OrderDataItem
-            label={ORDER_LABELS["status"]}
-            data={status}
-            Icon={WidgetsRoundedIcon}
-          />
-        )}
-        {wave && (
-          <OrderDataItem
-            label={ORDER_LABELS["wave"]}
-            data={wave}
-            Icon={RequestQuoteRoundedIcon}
-          />
-        )}
-        {quantity && (
-          <OrderDataItem
-            label={ORDER_LABELS["quantity"]}
-            data={quantity}
-            Icon={NearMeOutlinedIcon}
-          />
-        )}
-        {(availableLocations?.length ?? 0 > 0) && !location ? (
-          <FormControl fullWidth>
-            <InputLabel id="available-locations-select-label">
-              {ORDER_LABELS["location"]}
-            </InputLabel>
-            <Select
-              labelId="available-locations-select-label"
-              id="available-locations-select"
-              value={locationId ?? ""}
-              label={ORDER_LABELS["location"]}
-              onChange={(event) => {
-                console.log("event", event.target.value);
-                onLocationChange?.(Number(event.target.value) ?? 0);
-              }}
-            >
-              {availableLocations?.map((location, index) => (
-                <MenuItem value={index}>{location.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ) : (
-          !location && (
-            <Typography variant="body1" fontWeight="bold">
-              No hay ubicaciones disponibles.
+        <CardContent>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={1}
+          >
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 600,
+                  color: COLOR_BY_STATUS[status].backgroundColor,
+                }}
+              >
+                Orden #{id}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Oleada: <strong>{wave}</strong>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Estado:{" "}
+                <strong
+                  style={{
+                    color: COLOR_BY_STATUS[status].backgroundColor,
+                  }}
+                >
+                  {ORDER_STATUS_LABELS[status as unknown as ORDER_STATUS]}
+                </strong>
+              </Typography>
+            </Box>
+          </Stack>
+
+          {!!location ? (
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Ubicación asignada:{" "}
+              <strong>
+                {locationsData?.find((lc) => lc.id === Number(location))?.name}
+              </strong>
             </Typography>
-          )
-        )}
+          ) : (
+            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+              <FormControl size="small" sx={{ minWidth: 160 }}>
+                <InputLabel id="ubicacion-select-label">
+                  Asignar ubicación
+                </InputLabel>
+                <Select
+                  labelId="ubicacion-select-label"
+                  value={location}
+                  label="Asignar ubicación"
+                  onChange={(event) => {
+                    console.log("event", event.target.value);
+                    onLocationChange?.(Number(event.target.value) ?? 0);
+                  }}
+                >
+                  {availableLocations?.map((location) => (
+                    <MenuItem value={location.id}>{location.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+          )}
 
-        <Box
-          display="flex"
-          flexDirection="row"
-          gap={1}
-          alignItems="center"
-          justifyContent={"space-between"}
-        >
-          <TextField
-            name="barcode"
-            id="outlined-basic"
-            label="EAN Producto"
-            variant="outlined"
-            onChange={(event) => {
-              setProductEAN(event.target.value);
-            }}
-            value={productEAN}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            type="button"
-            onClick={() => onSubmitBarcode?.(productEAN)}
-          >
-            Seleccionar Producto
-          </Button>
-        </Box>
-
-        <Box
-          display="flex"
-          flexDirection="row"
-          flex={1}
-          justifyContent="space-between"
-        >
-          <Button
-            sx={{ maxHeight: 36 }}
-            variant="contained"
-            color="success"
-            onClick={() => setQuantity(1)}
-          >
-            Completar
-          </Button>
-          {quantity ? (
+          <Stack direction="row" spacing={1}>
+            <Button variant="contained" color="success" onClick={() => {}}>
+              Entregado
+            </Button>
             <Button
-              sx={{ maxHeight: 36 }}
               variant="contained"
               color="primary"
-              onClick={() => setOpen(true)}
+              onClick={() => setIsProductModalOpen(true)}
             >
-              Editar
+              Ver productos
             </Button>
-          ) : (
-            <Button
-              sx={{ maxHeight: 36 }}
-              variant="contained"
-              color="error"
-              onClick={() => setOpen(true)}
-            >
-              Incompleto
-            </Button>
-          )}
-        </Box>
-      </Box>
-      <Dialog
-        sx={{
-          borderRadius: 40,
-        }}
+            {!!location && (
+              <Button variant="contained" color="error" onClick={() => {}}>
+                Liberar
+              </Button>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
+      <ProductsDetailModal
+        open={isProductModalOpen}
+        setOpen={setIsProductModalOpen}
+        order={order}
+      />
+      <QuantityModal
         open={open}
-        onClose={() => setOpen(false)}
-        TransitionComponent={Transition}
-        slotProps={{
-          paper: {
-            component: "form",
-            onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-              event.preventDefault();
-              const formData = new FormData(event.currentTarget);
-              const formJson = Object.fromEntries((formData as any).entries());
-              const newQuantity = formJson.quantity;
-              setQuantity(newQuantity);
-              setOpen(false);
-            },
-          },
+        setOpen={setOpen}
+        setQuantity={(newQuantity) => {
+          setQuantity(newQuantity);
+          setOpen(false);
         }}
-      >
-        <DialogTitle>Selecciona la cantidad</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Seleccione la cantidad que empacaste
-          </DialogContentText>
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            id="quantity"
-            name="quantity"
-            label="Cantidad enviada"
-            type="number"
-            fullWidth
-            variant="standard"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => setOpen(false)}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" variant="contained" color="success">
-            Aceptar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        quantity={quantity}
+      />
     </>
   );
 }
-
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any, any>;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
