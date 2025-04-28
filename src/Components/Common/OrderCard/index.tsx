@@ -243,7 +243,7 @@ export default function OrderCard({
                   color="primary"
                   onClick={() => onCompleteOrder?.(false)}
                 >
-                  Completar Caja
+                  Pedir Caja
                 </Button>
                 <Button
                   variant="contained"
