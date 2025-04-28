@@ -124,37 +124,35 @@ export default function OrderCard({
             </Stack>
           </Stack>
 
-          {!!location && false ? (
-            <Typography variant="body2" color="text.secondary" mb={2}>
-              Ubicación asignada:{" "}
-              <strong>
-                {locationsData?.find((lc) => lc.id === Number(location))
-                  ?.name ?? location}
-              </strong>
-            </Typography>
-          ) : (
-            order.status === 1 && (
-              <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-                <FormControl size="small" sx={{ minWidth: 160 }}>
-                  <InputLabel id="ubicacion-select-label">
-                    Asignar ubicación
-                  </InputLabel>
-                  <Select
-                    labelId="ubicacion-select-label"
-                    value={location}
-                    label="Asignar ubicación"
-                    onChange={(event) => {
-                      console.log("event", event.target.value);
-                      onLocationChange?.(Number(event.target.value) ?? 0);
-                    }}
-                  >
-                    {availableLocations?.map((location) => (
-                      <MenuItem value={location.id}>{location.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-            )
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Ubicación asignada:{" "}
+            <strong>
+              {locationsData?.find((lc) => lc.id === Number(location))?.name ??
+                location}
+            </strong>
+          </Typography>
+
+          {order.status === 1 && (
+            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+              <FormControl size="small" sx={{ minWidth: 160 }}>
+                <InputLabel id="ubicacion-select-label">
+                  Asignar ubicación
+                </InputLabel>
+                <Select
+                  labelId="ubicacion-select-label"
+                  value={location}
+                  label="Asignar ubicación"
+                  onChange={(event) => {
+                    console.log("event", event.target.value);
+                    onLocationChange?.(Number(event.target.value) ?? 0);
+                  }}
+                >
+                  {availableLocations?.map((location) => (
+                    <MenuItem value={location.id}>{location.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
           )}
           {order.status === 1 && (
             <>

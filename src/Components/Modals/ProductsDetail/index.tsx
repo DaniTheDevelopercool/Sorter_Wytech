@@ -62,7 +62,6 @@ export default function ProductsDetailModal({
             <TableHead>
               <TableRow>
                 <TableCell>Código EAN</TableCell>
-                <TableCell align="right">Nombre</TableCell>
                 <TableCell align="right">Cantidad Solicitada</TableCell>
                 <TableCell align="right">Cantidad enviada</TableCell>
               </TableRow>
@@ -75,7 +74,6 @@ export default function ProductsDetailModal({
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
                     <TableCell align="right">{product.EAN}</TableCell>
-                    <TableCell align="right">{product.name}</TableCell>
                     <TableCell align="right">{quantity}</TableCell>
                     <TableCell align="right">{pickedQuantity}</TableCell>
                   </TableRow>
@@ -88,13 +86,10 @@ export default function ProductsDetailModal({
       <DialogActions>
         <Button
           variant="contained"
-          color="error"
+          color="primary"
           onClick={() => setOpen(false)}
         >
-          Cancelar
-        </Button>
-        <Button type="submit" variant="contained" color="success">
-          Marcar como completado
+          Ok
         </Button>
       </DialogActions>
     </Dialog>
