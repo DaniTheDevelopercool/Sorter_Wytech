@@ -12,6 +12,8 @@ export type Order = {
   status: 0 | 1 | 2 | 3;
   wave: string;
   location: string;
+  currentProductEAN?: string;
+  currentProductQuantity?: number;
   orderProducts: OrderProduct[];
 };
 

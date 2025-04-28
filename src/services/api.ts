@@ -64,6 +64,26 @@ export const api = createApi({
         body: { productEAN: ean },
       }),
     }),
+    completeProductPicking: builder.mutation<
+      void,
+      { orderId: string; ean: string; quantity: number }
+    >({
+      query: ({ orderId, ean, quantity }) => ({
+        url: `orders/${orderId}/submit-product-complete`,
+        method: "POST",
+        body: { productEAN: ean, quantity },
+      }),
+    }),
+    completeOrder: builder.mutation<
+      void,
+      { orderId: string; isLastBox: boolean }
+    >({
+      query: ({ orderId, isLastBox }) => ({
+        url: `orders/${orderId}/submit-order-complete`,
+        method: "POST",
+        body: { isLastBox },
+      }),
+    }),
   }),
 });
 
@@ -77,4 +97,6 @@ export const {
   useLinkLabelWithLocationMutation,
   useCreateLocationMutation,
   useDeleteLocationMutation,
+  useCompleteProductPickingMutation,
+  useCompleteOrderMutation
 } = api;

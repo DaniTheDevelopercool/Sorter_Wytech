@@ -6,7 +6,10 @@ import { useParams } from "react-router";
 import Loading from "../../Components/Common/Loading";
 import OrderCard from "../../Components/Common/OrderCard";
 import {
+  useAssignEanMutation,
   useAssignLocationMutation,
+  useCompleteOrderMutation,
+  useCompleteProductPickingMutation,
   useGetLocationsQuery,
   useGetOrdersQuery,
 } from "../../services/api";
@@ -23,6 +26,9 @@ export default function Orders() {
   const { data: locationsData, refetch: refetchLocations } =
     useGetLocationsQuery();
   const [setLocation] = useAssignLocationMutation();
+  const [setEanInDB] = useAssignEanMutation();
+  const [setCompleteProductPicking] = useCompleteProductPickingMutation();
+  const [setCompleteOrder] = useCompleteOrderMutation();
 
   const onLocationChange = async (orderId: string, location: number) => {
     setLoading(true);
@@ -38,18 +44,73 @@ export default function Orders() {
     console.log("Assign response", response);
   };
 
+  const onEANSubmit = async (orderID: string | number, ean: string) => {
+    setLoading(true);
+    const response = await setEanInDB({
+      orderId: orderID.toString(),
+      ean: ean,
+    });
+    if (response.data) {
+      refetch();
+      refetchLocations();
+    }
+    setLoading(false);
+    console.log("onEANSubmit response", response);
+  };
+
+  const onCompleteProductPicking = async (
+    orderID: string | number,
+    ean: string,
+    quantity: number
+  ) => {
+    setLoading(true);
+    const response = await setCompleteProductPicking({
+      orderId: orderID.toString(),
+      ean,
+      quantity,
+    });
+    if (response.data) {
+      refetch();
+      refetchLocations();
+    }
+    setLoading(false);
+    console.log("onCompleteProductPicking response", response);
+  };
+
+  const onCompleteOrder = async (
+    orderID: string | number,
+    isLastBox: boolean
+  ) => {
+    setLoading(true);
+    const response = await setCompleteOrder({
+      orderId: orderID.toString(),
+      isLastBox,
+    });
+    if (response.data) {
+      refetch();
+      refetchLocations();
+    }
+    setLoading(false);
+    console.log("onCompleteOrder response", response);
+  };
+
   const availableLocations = useMemo(
     () => locationsData?.filter((location) => !!!location.orderID),
     [locationsData]
   );
 
   const unasignedOrders = useMemo(
-    () => data?.filter((order) => !order.location) ?? [],
+    () => data?.filter((order) => !order.location && order.status !== 3) ?? [],
+    [data]
+  );
+
+  const completedOrders = useMemo(
+    () => data?.filter((order) => order.location && order.status === 3) ?? [],
     [data]
   );
 
   const assignedOrders = useMemo(
-    () => data?.filter((order) => !!order.location) ?? [],
+    () => data?.filter((order) => !!order.location && order.status === 1) ?? [],
     [data]
   );
 
@@ -69,6 +130,9 @@ export default function Orders() {
             availableLocations={availableLocations ?? []}
             locationsData={locationsData ?? []}
             onLocationChange={onLocationChange}
+            onEANSubmit={onEANSubmit}
+            onCompleteProductPicking={onCompleteProductPicking}
+            onCompleteOrder={onCompleteOrder}
           />
           <OrdersByCategory
             ordersTitle="Asignados"
@@ -76,6 +140,19 @@ export default function Orders() {
             availableLocations={availableLocations ?? []}
             locationsData={locationsData ?? []}
             onLocationChange={onLocationChange}
+            onEANSubmit={onEANSubmit}
+            onCompleteProductPicking={onCompleteProductPicking}
+            onCompleteOrder={onCompleteOrder}
+          />
+          <OrdersByCategory
+            ordersTitle="Completados"
+            orders={completedOrders}
+            availableLocations={availableLocations ?? []}
+            locationsData={locationsData ?? []}
+            onLocationChange={onLocationChange}
+            onEANSubmit={onEANSubmit}
+            onCompleteProductPicking={onCompleteProductPicking}
+            onCompleteOrder={onCompleteOrder}
           />
         </Box>
       )}
@@ -89,12 +166,22 @@ const OrdersByCategory = ({
   availableLocations,
   locationsData,
   onLocationChange,
+  onEANSubmit,
+  onCompleteProductPicking,
+  onCompleteOrder,
 }: {
   ordersTitle: string;
   orders: Order[];
   availableLocations: Location[];
   locationsData: Location[];
   onLocationChange: (orderId: string, locationId: number) => void;
+  onEANSubmit: (orderId: string, EAN: string) => void;
+  onCompleteProductPicking: (
+    orderId: string,
+    ean: string,
+    quantity: number
+  ) => void;
+  onCompleteOrder: (orderId: string, isLastBox: boolean) => void;
 }) => {
   const [show, setShow] = useState(false);
   return (
@@ -124,6 +211,13 @@ const OrdersByCategory = ({
               locationsData={locationsData}
               onLocationChange={(locationId) =>
                 onLocationChange(order.id, locationId)
+              }
+              onEANSubmit={(ean) => onEANSubmit(order.id, ean)}
+              onCompleteProductPicking={(ean, quantity) =>
+                onCompleteProductPicking(order.id, ean, quantity)
+              }
+              onCompleteOrder={(isLastBox) =>
+                onCompleteOrder(order.id, isLastBox)
               }
             />
           ))}
