@@ -1,16 +1,12 @@
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import {
   Box,
   Button,
   Card,
   CardContent,
   Divider,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
@@ -21,16 +17,12 @@ import {
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
 } from "../../../types/Orders";
-import QuantityModal from "../../Modals/Quantity";
 import ProductsDetailModal from "../../Modals/ProductsDetail";
-import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import QuantityModal from "../../Modals/Quantity";
 
 export default function OrderCard({
   order,
   locationsData,
-  availableLocations,
-  onLocationChange,
-  onEANSubmit,
   onCompleteProductPicking,
   onCompleteOrder,
 }: {
@@ -70,6 +62,7 @@ export default function OrderCard({
           backgroundColor: "#f5faff",
           borderRadius: 2,
           boxShadow: 3,
+          alignSelf: "baseline",
         }}
       >
         <CardContent>
@@ -132,7 +125,7 @@ export default function OrderCard({
             </strong>
           </Typography>
 
-          {order.status === 1 && (
+          {/* {order.status === 1 && (
             <Stack direction="row" spacing={1} alignItems="center" mb={2}>
               <FormControl size="small" sx={{ minWidth: 160 }}>
                 <InputLabel id="ubicacion-select-label">
@@ -153,11 +146,11 @@ export default function OrderCard({
                 </Select>
               </FormControl>
             </Stack>
-          )}
+          )} */}
           {order.status === 1 && (
             <>
               <Divider sx={{ mb: 2 }} />
-              {order.currentProductEAN ? (
+              {order.currentProductEAN && (
                 <Stack direction="column" spacing={1} mb={2}>
                   <Typography variant="body2" color="text.secondary">
                     Producto Actual:{" "}
@@ -196,48 +189,20 @@ export default function OrderCard({
                       variant="outlined"
                       size="small"
                       onClick={() => {
-                        if (currentProductData) {
-                          onCompleteProductPicking?.(
-                            order.currentProductEAN ?? "",
-                            currentProductData.quantity
-                          );
-                        }
+                        onCompleteProductPicking?.(
+                          order.currentProductEAN ?? "",
+                          currentProductData?.quantity ?? 0
+                        );
                       }}
                       sx={{ height: "100%" }}
                     >
-                      Completado
+                      Tarjeta Verde
                     </Button>
                   </Stack>
                 </Stack>
-              ) : (
-                <Stack direction="row" spacing={1} mb={2}>
-                  <TextField
-                    label="Escanear código de barras"
-                    variant="outlined"
-                    size="small"
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        const value = (event.target as HTMLInputElement).value;
-                        console.log("Barcode scanned:", value);
-                        onEANSubmit(value);
-                      }
-                    }}
-                    sx={{ flexGrow: 1 }}
-                  />
-                  {/* <IconButton
-                color="primary"
-                onClick={() => {
-                  
-                }}
-                sx={{ height: "100%" }}
-              >
-                <SearchRoundedIcon />
-              </IconButton> */}
-                </Stack>
               )}
-              <Divider sx={{ mb: 2 }} />
 
-              <Stack direction="row" spacing={1}>
+              <Stack direction="row" spacing={1} justifyContent="space-between">
                 <Button
                   variant="contained"
                   color="primary"

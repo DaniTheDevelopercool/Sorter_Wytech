@@ -74,6 +74,15 @@ export const api = createApi({
         body: { productEAN: ean, quantity },
       }),
     }),
+    completeProductPickingWithNFC: builder.mutation<
+      void,
+      { locationID: string }
+    >({
+      query: ({ locationID }) => ({
+        url: `orders/NFC-submit-product-quantity/${locationID}`,
+        method: "POST",
+      }),
+    }),
     completeOrder: builder.mutation<
       void,
       { orderId: string; isLastBox: boolean }
@@ -98,5 +107,6 @@ export const {
   useCreateLocationMutation,
   useDeleteLocationMutation,
   useCompleteProductPickingMutation,
-  useCompleteOrderMutation
+  useCompleteOrderMutation,
+  useCompleteProductPickingWithNFCMutation,
 } = api;

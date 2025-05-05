@@ -1,8 +1,7 @@
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import { Badge, Box, Typography } from "@mui/material";
+import { Badge, Box, Button, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
-import { useParams } from "react-router";
 import Loading from "../../Components/Common/Loading";
 import OrderCard from "../../Components/Common/OrderCard";
 import {
@@ -10,24 +9,24 @@ import {
   useAssignLocationMutation,
   useCompleteOrderMutation,
   useCompleteProductPickingMutation,
+  useCompleteProductPickingWithNFCMutation,
   useGetLocationsQuery,
   useGetOrdersQuery,
 } from "../../services/api";
 import { Location } from "../../types/Locations";
 import { Order } from "../../types/Orders";
-import Header from "./Header";
-import OrderGroupHeader from "./OrderGroupHeader";
 import RoomServiceRoundedIcon from "@mui/icons-material/RoomServiceRounded";
 
 export default function Orders() {
   const [loading, setLoading] = useState(false);
-  const { id } = useParams();
   const { data, error, refetch } = useGetOrdersQuery();
   const { data: locationsData, refetch: refetchLocations } =
     useGetLocationsQuery();
   const [setLocation] = useAssignLocationMutation();
   const [setEanInDB] = useAssignEanMutation();
   const [setCompleteProductPicking] = useCompleteProductPickingMutation();
+  const [setCompleteProductPickingWithNFC] =
+    useCompleteProductPickingWithNFCMutation();
   const [setCompleteOrder] = useCompleteOrderMutation();
 
   const onLocationChange = async (orderId: string, location: number) => {
@@ -58,17 +57,16 @@ export default function Orders() {
     console.log("onEANSubmit response", response);
   };
 
-  const onCompleteProductPicking = async (
-    orderID: string | number,
-    ean: string,
-    quantity: number
-  ) => {
+  const onCompleteProductPicking = async (orderID: string | number) => {
     setLoading(true);
-    const response = await setCompleteProductPicking({
-      orderId: orderID.toString(),
-      ean,
-      quantity,
+    const response = await setCompleteProductPickingWithNFC({
+      locationID: data?.find((order) => order.id === orderID)?.location ?? "",
     });
+    //  setCompleteProductPicking({
+    //   orderId: orderID.toString(),
+    //   ean,
+    //   quantity,
+    // });
     if (response.data) {
       refetch();
       refetchLocations();
@@ -122,8 +120,11 @@ export default function Orders() {
       {loading && <Loading />}
       {(data?.length ?? 0 > 0) && (
         <Box display="flex" flexDirection="column" gap={2} p={2}>
-          <Header />
-          <OrderGroupHeader groupOrderID={id} />
+          {/* <Header />
+          <OrderGroupHeader groupOrderID={id} /> */}
+          <Button variant="contained" onClick={refetch}>
+            <Typography variant="body1">Refrescar</Typography>
+          </Button>
           <OrdersByCategory
             ordersTitle="Sin asignar"
             orders={unasignedOrders}
@@ -183,7 +184,7 @@ const OrdersByCategory = ({
   ) => void;
   onCompleteOrder: (orderId: string, isLastBox: boolean) => void;
 }) => {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
   return (
     <Box display="flex" flexDirection="column" gap={2} flexWrap="wrap">
       <Box
@@ -202,7 +203,13 @@ const OrdersByCategory = ({
         {show ? <KeyboardArrowDownRoundedIcon /> : <ChevronRightRoundedIcon />}
       </Box>
       {show && (
-        <Box display="flex" flexDirection="row" gap={2} flexWrap="wrap">
+        <Box
+          display="flex"
+          flexDirection="row"
+          gap={2}
+          flexWrap="wrap"
+          justifySelf="baseline"
+        >
           {orders?.map((order) => (
             <OrderCard
               key={order.id}
