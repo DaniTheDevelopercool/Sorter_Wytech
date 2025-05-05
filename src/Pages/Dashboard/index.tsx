@@ -2,12 +2,20 @@ import { Stack, Typography } from "@mui/material";
 import LabelIcon from "@mui/icons-material/Label";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import GroupWorkIcon from "@mui/icons-material/GroupWork";
 import { useNavigate } from "react-router";
+import { useGetOrdersQuery } from "../../services/api";
 
 const DashboardMenu = () => {
+  const { data } = useGetOrdersQuery();
   const navigate = useNavigate();
   const OPTIONS = [
+    {
+      label: "PEDIDOS",
+      description: "Gestiona los pedidos",
+      value: "/orders",
+      icon: <ShoppingCartIcon />,
+      color: "#ff9800",
+    },
     {
       label: "ETIQUETAS",
       description: "Gestiona las etiquetas digitales de la bodega",
@@ -22,31 +30,35 @@ const DashboardMenu = () => {
       icon: <LocationOnIcon />,
       color: "#2196f3",
     },
-    {
-      label: "PEDIDOS",
-      description: "Gestiona los pedidos",
-      value: "/orders",
-      icon: <ShoppingCartIcon />,
-      color: "#ff9800",
-    },
-    {
-      label: "GRUPOS",
-      description: "Gestiona los grupos de pedidos",
-      value: "/groups",
-      icon: <GroupWorkIcon />,
-      color: "#9c27b0",
-    },
   ];
 
   return (
     <Stack
-      width={"50%"}
-      p={2}
+      p={16}
       direction={"column"}
       spacing={2}
       justifyContent="center"
       flexWrap="wrap"
+      alignSelf="center"
+      justifySelf="center"
     >
+      <Typography
+        variant="h4"
+        fontWeight={600}
+        textAlign="center"
+        alignSelf="start"
+      >
+        Bienvenido al sistema de gestión de pedidos
+      </Typography>
+      <Typography
+        variant="h6"
+        fontWeight={400}
+        textAlign="center"
+        alignSelf="start"
+        color="text.secondary"
+      >
+        {data?.length} pedidos en total
+      </Typography>
       {OPTIONS.map((option) => (
         <Stack
           p={2}

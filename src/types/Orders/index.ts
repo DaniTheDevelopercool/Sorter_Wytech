@@ -15,6 +15,7 @@ export type Order = {
   currentProductEAN?: string;
   currentProductQuantity?: number;
   orderProducts: OrderProduct[];
+  PEDSAP?: string;
 };
 
 export enum ORDER_STATUS {

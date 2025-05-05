@@ -34,7 +34,7 @@ export default function OrderCard({
   onCompleteProductPicking?: (ean: string, quantity: number) => void;
   onCompleteOrder?: (isLastBox: boolean) => void;
 }) {
-  const { id, location, status, wave } = order;
+  const { id, location, status, wave, PEDSAP } = order;
   const [quantity, setQuantity] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -86,7 +86,7 @@ export default function OrderCard({
                     color: COLOR_BY_STATUS[status].backgroundColor,
                   }}
                 >
-                  Orden #{id}
+                  Orden {PEDSAP ?? id}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Oleada: <strong>{wave}</strong>
