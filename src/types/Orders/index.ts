@@ -29,7 +29,7 @@ export const ORDER_STATUS_LABELS: Record<ORDER_STATUS, string> = {
   [ORDER_STATUS.UNASSIGNED]: "Sin asignar",
   [ORDER_STATUS.ASSIGNED]: "Asignado",
   [ORDER_STATUS.IN_PROGRESS]: "En proceso",
-  [ORDER_STATUS.COMPLETED]: "Completado",
+  [ORDER_STATUS.COMPLETED]: "Finalizado",
 };
 
 export const COLOR_BY_STATUS = {

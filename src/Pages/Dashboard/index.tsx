@@ -1,7 +1,8 @@
-import { Stack, Typography } from "@mui/material";
+import GroupWorkRoundedIcon from "@mui/icons-material/GroupWorkRounded";
 import LabelIcon from "@mui/icons-material/Label";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import { Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
 import { useGetOrdersQuery } from "../../services/api";
 
@@ -9,6 +10,13 @@ const DashboardMenu = () => {
   const { data } = useGetOrdersQuery();
   const navigate = useNavigate();
   const OPTIONS = [
+    {
+      label: "GRUPOS DE PEDIDOS",
+      description: "Gestiona los grupos de pedidos",
+      value: "/groups",
+      icon: <GroupWorkRoundedIcon />,
+      color: "#3f51b5",
+    },
     {
       label: "PEDIDOS",
       description: "Gestiona los pedidos",

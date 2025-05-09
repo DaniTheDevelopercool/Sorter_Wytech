@@ -1,235 +1,240 @@
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import { Badge, Box, Button, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
+import ContactlessIcon from "@mui/icons-material/Contactless";
+import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
+import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { useNavigate, useParams } from "react-router";
 import Loading from "../../Components/Common/Loading";
-import OrderCard from "../../Components/Common/OrderCard";
 import {
-  useAssignEanMutation,
-  useAssignLocationMutation,
-  useCompleteOrderMutation,
-  useCompleteProductPickingMutation,
-  useCompleteProductPickingWithNFCMutation,
-  useGetLocationsQuery,
-  useGetOrdersQuery,
+  useGetOrdersByWaveQuery,
+  useSimulateNFCCardMutation,
 } from "../../services/api";
-import { Location } from "../../types/Locations";
-import { Order } from "../../types/Orders";
-import RoomServiceRoundedIcon from "@mui/icons-material/RoomServiceRounded";
+import { Order, ORDER_STATUS_LABELS } from "../../types/Orders";
+import { useState } from "react";
 
 export default function Orders() {
-  const [loading, setLoading] = useState(false);
-  const { data, error, refetch } = useGetOrdersQuery();
-  const { data: locationsData, refetch: refetchLocations } =
-    useGetLocationsQuery();
-  const [setLocation] = useAssignLocationMutation();
-  const [setEanInDB] = useAssignEanMutation();
-  const [setCompleteProductPicking] = useCompleteProductPickingMutation();
-  const [setCompleteProductPickingWithNFC] =
-    useCompleteProductPickingWithNFCMutation();
-  const [setCompleteOrder] = useCompleteOrderMutation();
-
-  const onLocationChange = async (orderId: string, location: number) => {
-    setLoading(true);
-    const response = await setLocation({
-      orderId,
-      locationId: location,
-    });
-    if (response.data) {
-      refetch();
-      refetchLocations();
-    }
-    setLoading(false);
-    console.log("Assign response", response);
-  };
-
-  const onEANSubmit = async (orderID: string | number, ean: string) => {
-    setLoading(true);
-    const response = await setEanInDB({
-      orderId: orderID.toString(),
-      ean: ean,
-    });
-    if (response.data) {
-      refetch();
-      refetchLocations();
-    }
-    setLoading(false);
-    console.log("onEANSubmit response", response);
-  };
-
-  const onCompleteProductPicking = async (orderID: string | number) => {
-    setLoading(true);
-    const response = await setCompleteProductPickingWithNFC({
-      locationID: data?.find((order) => order.id === orderID)?.location ?? "",
-    });
-    //  setCompleteProductPicking({
-    //   orderId: orderID.toString(),
-    //   ean,
-    //   quantity,
-    // });
-    if (response.data) {
-      refetch();
-      refetchLocations();
-    }
-    setLoading(false);
-    console.log("onCompleteProductPicking response", response);
-  };
-
-  const onCompleteOrder = async (
-    orderID: string | number,
-    isLastBox: boolean
-  ) => {
-    setLoading(true);
-    const response = await setCompleteOrder({
-      orderId: orderID.toString(),
-      isLastBox,
-    });
-    if (response.data) {
-      refetch();
-      refetchLocations();
-    }
-    setLoading(false);
-    console.log("onCompleteOrder response", response);
-  };
-
-  const availableLocations = useMemo(
-    () => locationsData?.filter((location) => !!!location.orderID),
-    [locationsData]
+  const { waveId } = useParams();
+  const [wave, setWave] = useState(waveId ?? "");
+  const navigate = useNavigate();
+  const { data, error, isLoading, refetch } = useGetOrdersByWaveQuery(
+    wave ?? waveId ?? ""
   );
+  const [simulateNFCCard, { isLoading: nfcLoading }] =
+    useSimulateNFCCardMutation();
 
-  const unasignedOrders = useMemo(
-    () => data?.filter((order) => !order.location && order.status !== 3) ?? [],
-    [data]
-  );
+  const loading = nfcLoading || isLoading;
 
-  const completedOrders = useMemo(
-    () => data?.filter((order) => order.location && order.status === 3) ?? [],
-    [data]
-  );
-
-  const assignedOrders = useMemo(
-    () => data?.filter((order) => !!order.location && order.status === 1) ?? [],
-    [data]
-  );
-
-  if (error) {
-    console.log("error", error);
+  if (error && !!wave) {
+    return (
+      <Stack p={6}>
+        <Typography variant="h4" fontWeight={600}>
+          Error al cargar los pedidos
+        </Typography>
+        <Typography variant="body1">
+          Ocurrió un error al cargar los pedidos. Por favor, inténtalo de nuevo.
+        </Typography>
+      </Stack>
+    );
   }
+
+  const columns: GridColDef<Order>[] = [
+    { field: "PEDSAP", headerName: "Pedido", width: 120 },
+    {
+      field: "wave",
+      headerName: "Grupo",
+      width: 150,
+    },
+    {
+      field: "status",
+      headerName: "Estado del lote",
+      width: 120,
+      renderCell: (params) => {
+        const status = params.value;
+        return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS];
+      },
+    },
+    {
+      field: "location",
+      headerName: "Ubicación",
+      width: 150,
+    },
+    {
+      field: "cantidadPedida",
+      headerName: "Cantidad pedida",
+      width: 150,
+      renderCell: (params) => {
+        console.log("params", params);
+
+        const order = data?.find((order) => order.PEDSAP === params.row.PEDSAP);
+        const totalProducts = order?.orderProducts.reduce(
+          (acc, product) => acc + product.quantity,
+          0
+        );
+        return totalProducts ?? 0;
+      },
+    },
+    {
+      field: "cantidadConfirmada",
+      headerName: "Cantidad empacada",
+      width: 150,
+      renderCell: (params) => {
+        const order = data?.find((order) => order.PEDSAP === params.row.PEDSAP);
+        const pickedProducts = order?.orderProducts.reduce(
+          (acc, product) => acc + product.pickedQuantity,
+          0
+        );
+        return pickedProducts ?? 0;
+      },
+    },
+    {
+      field: "cantidadPendiente",
+      headerName: "Cantidad pendiente",
+      width: 150,
+      renderCell: (params) => {
+        const order = data?.find((order) => order.PEDSAP === params.row.PEDSAP);
+        const pendingProducts = order?.orderProducts.reduce(
+          (acc, product) => acc + product.quantity - product.pickedQuantity,
+          0
+        );
+        return pendingProducts ?? 0;
+      },
+    },
+    {
+      field: "porcentajeCumplimiento",
+      headerName: "Nivel de servicio",
+      width: 150,
+      renderCell: (params) => {
+        const order = data?.find((order) => order.PEDSAP === params.row.PEDSAP);
+        const totalProducts = order?.orderProducts.reduce(
+          (acc, product) => acc + product.quantity,
+          0
+        );
+        const pickedProducts = order?.orderProducts.reduce(
+          (acc, product) => acc + product.pickedQuantity,
+          0
+        );
+        const percentage = totalProducts
+          ? ((pickedProducts ?? 0) / totalProducts) * 100
+          : 0;
+        return `${percentage.toFixed(2)}%`;
+      },
+    },
+    {
+      field: "details",
+      headerName: "Detalles",
+      flex: 1,
+      minWidth: 150,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        return (
+          <Button onClick={() => navigate(`/order/${params.row.PEDSAP}`)}>
+            <RemoveRedEyeRoundedIcon />
+          </Button>
+        );
+      },
+    },
+    {
+      field: "simulateNFCGreenCard",
+      headerName: "Tarjeta Verde",
+      flex: 1,
+      minWidth: 150,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        return (
+          <Button
+            onClick={() =>
+              simulateNFCCard({
+                locationID: params.row.location,
+                color: "GREEN",
+              })
+            }
+          >
+            <ContactlessIcon color="success" />
+          </Button>
+        );
+      },
+    },
+    {
+      field: "simulateNFCBlueCard",
+      headerName: "Tarjeta Azul",
+      flex: 1,
+      minWidth: 150,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        return (
+          <Button
+            onClick={() =>
+              simulateNFCCard({
+                locationID: params.row.location,
+                color: "BLUE",
+              })
+            }
+          >
+            <ContactlessIcon color="primary" />
+          </Button>
+        );
+      },
+    },
+    {
+      field: "simulateNFCPurpleCard",
+      headerName: "Tarjeta Morada",
+      flex: 1,
+      minWidth: 150,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        return (
+          <Button
+            onClick={() =>
+              simulateNFCCard({
+                locationID: params.row.location,
+                color: "PURPLE",
+              })
+            }
+          >
+            <ContactlessIcon color="action" />
+          </Button>
+        );
+      },
+    },
+  ];
+
   return (
     <Box flex={1} flexDirection="column">
       {loading && <Loading />}
-      {(data?.length ?? 0 > 0) && (
-        <Box display="flex" flexDirection="column" gap={2} p={2}>
-          {/* <Header />
-          <OrderGroupHeader groupOrderID={id} /> */}
-          <Button variant="contained" onClick={refetch}>
-            <Typography variant="body1">Refrescar</Typography>
-          </Button>
-          <OrdersByCategory
-            ordersTitle="Sin asignar"
-            orders={unasignedOrders}
-            availableLocations={availableLocations ?? []}
-            locationsData={locationsData ?? []}
-            onLocationChange={onLocationChange}
-            onEANSubmit={onEANSubmit}
-            onCompleteProductPicking={onCompleteProductPicking}
-            onCompleteOrder={onCompleteOrder}
-          />
-          <OrdersByCategory
-            ordersTitle="Asignados"
-            orders={assignedOrders}
-            availableLocations={availableLocations ?? []}
-            locationsData={locationsData ?? []}
-            onLocationChange={onLocationChange}
-            onEANSubmit={onEANSubmit}
-            onCompleteProductPicking={onCompleteProductPicking}
-            onCompleteOrder={onCompleteOrder}
-          />
-          <OrdersByCategory
-            ordersTitle="Completados"
-            orders={completedOrders}
-            availableLocations={availableLocations ?? []}
-            locationsData={locationsData ?? []}
-            onLocationChange={onLocationChange}
-            onEANSubmit={onEANSubmit}
-            onCompleteProductPicking={onCompleteProductPicking}
-            onCompleteOrder={onCompleteOrder}
-          />
-        </Box>
+      {!!!wave ? (
+        <Stack p={6} gap={2} direction={"column"}>
+          <Typography variant="h4" fontWeight={600}>
+            Ingrese el grupo de pedidos
+          </Typography>
+          <Stack direction={"row"} gap={2}>
+            <TextField
+              label="ID del grupo"
+              variant="outlined"
+              onChange={(e) => setWave(e.target.value)}
+            />
+            <Button
+              variant="contained"
+              onClick={() => {
+                refetch();
+              }}
+            >
+              Buscar
+            </Button>
+          </Stack>
+        </Stack>
+      ) : (
+        (data?.length ?? 0) > 0 && (
+          <Stack p={6} direction={"column"} spacing={2}>
+            <Typography variant="h4" fontWeight={600}>
+              Grupo de pedidos #{wave}
+            </Typography>
+            <DataGrid rows={data} columns={columns} autoHeight />
+          </Stack>
+        )
       )}
     </Box>
   );
 }
-
-const OrdersByCategory = ({
-  ordersTitle,
-  orders,
-  availableLocations,
-  locationsData,
-  onLocationChange,
-  onEANSubmit,
-  onCompleteProductPicking,
-  onCompleteOrder,
-}: {
-  ordersTitle: string;
-  orders: Order[];
-  availableLocations: Location[];
-  locationsData: Location[];
-  onLocationChange: (orderId: string, locationId: number) => void;
-  onEANSubmit: (orderId: string, EAN: string) => void;
-  onCompleteProductPicking: (
-    orderId: string,
-    ean: string,
-    quantity: number
-  ) => void;
-  onCompleteOrder: (orderId: string, isLastBox: boolean) => void;
-}) => {
-  const [show, setShow] = useState(true);
-  return (
-    <Box display="flex" flexDirection="column" gap={2} flexWrap="wrap">
-      <Box
-        display={"flex"}
-        flexDirection="row"
-        gap={1}
-        alignItems={"center"}
-        onClick={() => setShow(!show)}
-      >
-        <Typography variant="h5" fontWeight="bold" padding={2}>
-          {ordersTitle}
-        </Typography>
-        <Badge color="error" badgeContent={orders.length}>
-          <RoomServiceRoundedIcon />
-        </Badge>
-        {show ? <KeyboardArrowDownRoundedIcon /> : <ChevronRightRoundedIcon />}
-      </Box>
-      {show && (
-        <Box
-          display="flex"
-          flexDirection="row"
-          gap={2}
-          flexWrap="wrap"
-          justifySelf="baseline"
-        >
-          {orders?.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              availableLocations={availableLocations}
-              locationsData={locationsData}
-              onLocationChange={(locationId) =>
-                onLocationChange(order.id, locationId)
-              }
-              onEANSubmit={(ean) => onEANSubmit(order.id, ean)}
-              onCompleteProductPicking={(ean, quantity) =>
-                onCompleteProductPicking(order.id, ean, quantity)
-              }
-              onCompleteOrder={(isLastBox) =>
-                onCompleteOrder(order.id, isLastBox)
-              }
-            />
-          ))}
-        </Box>
-      )}
-    </Box>
-  );
-};

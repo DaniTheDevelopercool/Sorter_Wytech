@@ -3,14 +3,42 @@ import { Order } from "../types/Orders";
 import { Label } from "../types/Labels";
 import { Location } from "../types/Locations";
 
+const COLORS = {
+  BLUE: "bd3887da",
+  GREEN: "8d7b62da",
+  PURPLE: "5d7289da",
+};
+
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
     baseUrl: "http://localhost:3000/",
   }),
   endpoints: (builder) => ({
+    getWaves: builder.query<
+      {
+        string: {
+          wave: string;
+          totalProducts: number;
+          totalPicked: number;
+          orders: Order[];
+        };
+      },
+      void
+    >({
+      query: () => ({
+        url: "orders/grouped-by-wave",
+        method: "POST",
+      }),
+    }),
     getOrders: builder.query<Order[], void>({
       query: () => "orders",
+    }),
+    getOrdersByWave: builder.query<Order[], string>({
+      query: (waveId) => ({
+        url: `orders/orders-by-wave/${waveId}`,
+        method: "POST",
+      }),
     }),
     getLabels: builder.query<Label[], void>({
       query: () => "esl/labels",
@@ -44,53 +72,25 @@ export const api = createApi({
     getLocations: builder.query<Location[], void>({
       query: () => "esl/locations",
     }),
-    getAvailableLocations: builder.query<Location[], void>({
-      query: () => "esl/locations-available",
-    }),
-    assignLocation: builder.mutation<
+    simulateNFCCard: builder.mutation<
       void,
-      { orderId: string; locationId: number }
+      { locationID: string; color: "GREEN" | "BLUE" | "PURPLE" }
     >({
-      query: ({ orderId, locationId }) => ({
-        url: `orders/${orderId}/assign-location`,
-        method: "POST",
-        body: { location: locationId },
-      }),
-    }),
-    assignEan: builder.mutation<void, { orderId: string; ean: string }>({
-      query: ({ orderId, ean }) => ({
-        url: `orders/${orderId}/assign-product-picking`,
-        method: "POST",
-        body: { productEAN: ean },
-      }),
-    }),
-    completeProductPicking: builder.mutation<
-      void,
-      { orderId: string; ean: string; quantity: number }
-    >({
-      query: ({ orderId, ean, quantity }) => ({
-        url: `orders/${orderId}/submit-product-complete`,
-        method: "POST",
-        body: { productEAN: ean, quantity },
-      }),
-    }),
-    completeProductPickingWithNFC: builder.mutation<
-      void,
-      { locationID: string }
-    >({
-      query: ({ locationID }) => ({
-        url: `orders/NFC-submit-product-quantity/${locationID}`,
+      query: ({ locationID, color }) => ({
+        url: `orders/NFC/${locationID}/${COLORS[color]}`,
         method: "POST",
       }),
     }),
-    completeOrder: builder.mutation<
-      void,
-      { orderId: string; isLastBox: boolean }
-    >({
-      query: ({ orderId, isLastBox }) => ({
-        url: `orders/${orderId}/submit-order-complete`,
+    simulateBarcode: builder.mutation<void, string>({
+      query: (ean) => ({
+        url: `/orders/scan/${ean}`,
         method: "POST",
-        body: { isLastBox },
+      }),
+    }),
+    getOrderByPEDSAP: builder.query<Order, string>({
+      query: (orderId) => ({
+        url: `/orders/order-by-pedsap/${orderId}`,
+        method: "POST",
       }),
     }),
   }),
@@ -100,13 +100,12 @@ export const {
   useGetOrdersQuery,
   useGetLabelsQuery,
   useGetLocationsQuery,
-  useGetAvailableLocationsQuery,
-  useAssignLocationMutation,
-  useAssignEanMutation,
   useLinkLabelWithLocationMutation,
   useCreateLocationMutation,
   useDeleteLocationMutation,
-  useCompleteProductPickingMutation,
-  useCompleteOrderMutation,
-  useCompleteProductPickingWithNFCMutation,
+  useSimulateNFCCardMutation,
+  useGetWavesQuery,
+  useGetOrdersByWaveQuery,
+  useGetOrderByPEDSAPQuery,
+  useSimulateBarcodeMutation,
 } = api;
