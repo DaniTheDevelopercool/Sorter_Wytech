@@ -5,9 +5,10 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
 import { useGetOrdersQuery } from "../../services/api";
+import Loading from "../../Components/Common/Loading";
 
 const DashboardMenu = () => {
-  const { data } = useGetOrdersQuery();
+  const { data, isLoading } = useGetOrdersQuery();
   const navigate = useNavigate();
   const OPTIONS = [
     {
@@ -39,6 +40,10 @@ const DashboardMenu = () => {
       color: "#2196f3",
     },
   ];
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <Stack

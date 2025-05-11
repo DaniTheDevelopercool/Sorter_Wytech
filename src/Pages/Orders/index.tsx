@@ -23,6 +23,14 @@ export default function Orders() {
 
   const loading = nfcLoading || isLoading;
 
+  const onCardSimulate = async (
+    locationID: string,
+    color: "GREEN" | "BLUE" | "PURPLE"
+  ) => {
+    await simulateNFCCard({ locationID, color });
+    await refetch();
+  };
+
   if (error && !!wave) {
     return (
       <Stack p={6}>
@@ -142,14 +150,7 @@ export default function Orders() {
       align: "center",
       renderCell: (params) => {
         return (
-          <Button
-            onClick={() =>
-              simulateNFCCard({
-                locationID: params.row.location,
-                color: "GREEN",
-              })
-            }
-          >
+          <Button onClick={() => onCardSimulate(params.row.location, "GREEN")}>
             <ContactlessIcon color="success" />
           </Button>
         );
@@ -164,14 +165,7 @@ export default function Orders() {
       align: "center",
       renderCell: (params) => {
         return (
-          <Button
-            onClick={() =>
-              simulateNFCCard({
-                locationID: params.row.location,
-                color: "BLUE",
-              })
-            }
-          >
+          <Button onClick={() => onCardSimulate(params.row.location, "BLUE")}>
             <ContactlessIcon color="primary" />
           </Button>
         );
@@ -186,14 +180,7 @@ export default function Orders() {
       align: "center",
       renderCell: (params) => {
         return (
-          <Button
-            onClick={() =>
-              simulateNFCCard({
-                locationID: params.row.location,
-                color: "PURPLE",
-              })
-            }
-          >
+          <Button onClick={() => onCardSimulate(params.row.location, "PURPLE")}>
             <ContactlessIcon color="action" />
           </Button>
         );

@@ -83,8 +83,7 @@ export const api = createApi({
     }),
     simulateBarcode: builder.mutation<void, string>({
       query: (ean) => ({
-        url: `/orders/scan/${ean}`,
-        method: "POST",
+        url: `/orders/scan/[SRT1]${ean}`,
       }),
     }),
     getOrderByPEDSAP: builder.query<Order, string>({
